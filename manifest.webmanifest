@@ -1,0 +1,40 @@
+{
+  "name": "NEST Finanzas",
+  "short_name": "NEST",
+  "description": "Registra gastos en segundos y alcanza tus metas.",
+  "lang": "es-MX",
+  "start_url": "./index.html#add",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05060a",
+  "theme_color": "#05060a",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registrar gasto",
+      "url": "./index.html#add"
+    },
+    {
+      "name": "Escanear ticket",
+      "url": "./index.html?mode=photo#add"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "nest-finanzas",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tailwindcss -c tailwind.config.cjs -i css/tailwind.src.css -o css/tailwind.css --minify && cp node_modules/chart.js/dist/chart.umd.js vendor/chart.umd.min.js",
+    "mock": "node tests/mock-gas.mjs",
+    "test": "node tests/e2e.mjs"
+  },
+  "devDependencies": {
+    "chart.js": "4.4.1",
+    "playwright": "1.49.1",
+    "tailwindcss": "3.4.16"
+  }
+}

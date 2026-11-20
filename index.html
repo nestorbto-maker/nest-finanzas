@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>NEST Finanzas</title>
+  <meta name="description" content="Finanzas personales: registra gastos en segundos." />
+  <meta name="theme-color" content="#05060a" />
+
+  <!-- PWA / iOS -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NEST" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+
+  <!-- Todo local: abre al instante y funciona sin internet -->
+  <link rel="stylesheet" href="css/tailwind.css" />
+  <link rel="stylesheet" href="css/app.css" />
+  <script src="vendor/chart.umd.min.js" defer></script>
+</head>
+
+<body class="bg-[#05060a] text-white font-sans antialiased select-none">
+  <!-- Fondo con luces neón -->
+  <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+    <div class="orb orb-blue"></div>
+    <div class="orb orb-purple"></div>
+    <div class="orb orb-green"></div>
+  </div>
+
+  <!-- Barra superior -->
+  <header class="safe-top sticky top-0 z-30 px-5 pb-3 flex items-center justify-between gap-3 backdrop-blur-xl bg-[#05060a]/95 border-b border-white/5">
+    <div class="min-w-0">
+      <p class="text-[11px] uppercase tracking-[0.18em] text-white/55 truncate" id="today-label">Hoy</p>
+      <h1 class="text-lg font-semibold tracking-tight" id="screen-title">Registrar</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="sync-pill" class="sync-pill" aria-live="polite"></button>
+      <button id="btn-settings" class="w-9 h-9 rounded-full glass grid place-items-center active:scale-95 transition" aria-label="Ajustes">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="pb-32">
+    <!-- ════════════════ REGISTRAR ════════════════ -->
+    <section id="view-add" class="view px-5">
+      <!-- Disponible -->
+      <div class="text-center mt-3">
+        <p class="text-xs uppercase tracking-[0.2em] text-white/55">Disponible este mes</p>
+        <p id="add-remaining" class="text-3xl font-semibold tabular-nums mt-1 text-neon-green">—</p>
+        <div class="mx-auto mt-3 h-1 w-40 rounded-full bg-white/10 overflow-hidden">
+          <div id="add-remaining-bar" class="h-full rounded-full bg-gradient-to-r from-neon-green via-neon-cyan to-neon-blue transition-all duration-700" style="width:0%"></div>
+        </div>
+        <!-- Resumen semanal: una línea, se oculta hasta la próxima semana -->
+        <div id="weekly-banner" class="hidden weekly fade-in" role="status">
+          <span aria-hidden="true">📅</span>
+          <p class="flex-1 min-w-0"><span id="weekly-title" class="sr-only">Resumen semanal</span><span id="weekly-text"></span></p>
+          <button id="weekly-close" class="weekly-close" aria-label="Ocultar resumen semanal">×</button>
+        </div>
+      </div>
+
+      <!-- Tarjeta de captura -->
+      <div class="glass rounded-[28px] p-5 mt-4">
+        <!-- Selector de modo -->
+        <div class="segmented" role="tablist">
+          <button class="seg active" data-mode="text">⌨︎ Texto</button>
+          <button class="seg" data-mode="voice">🎙 Voz</button>
+          <button class="seg" data-mode="photo">📷 Foto</button>
+        </div>
+
+        <!-- Monto grande -->
+        <label class="block mt-4 text-center">
+          <span class="sr-only">Monto</span>
+          <div class="flex items-start justify-center gap-1">
+            <span class="text-3xl font-light text-white/55 mt-3">$</span>
+            <input id="in-amount" inputmode="decimal" enterkeyhint="next" autocomplete="off" placeholder="0" aria-label="Monto"
+              class="amount-input bg-transparent outline-none text-center text-7xl font-semibold tracking-tight tabular-nums w-full max-w-[16rem] placeholder-white/15" />
+          </div>
+        </label>
+
+        <!-- Panel: texto -->
+        <div data-panel="text" class="mt-4">
+          <input id="in-concept" autocomplete="off" enterkeyhint="done" aria-label="Concepto" placeholder="¿En qué? (ej. café en Starbucks)"
+            class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3.5 text-[15px] outline-none focus:border-neon-blue/60 placeholder-white/30 transition" />
+          <p class="text-[11px] text-white/50 mt-2 px-1 truncate">Tip: escribe “200 tacos” y separo el monto solo.</p>
+        </div>
+
+        <!-- Panel: voz -->
+        <div data-panel="voice" class="hidden mt-4 text-center">
+          <button id="btn-mic" class="mic mx-auto" aria-label="Dictar gasto">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5"/></svg>
+          </button>
+          <p id="voice-status" class="text-sm text-white/50 mt-4">Toca y di: “200 pesos en café”</p>
+          <p id="voice-transcript" class="text-base mt-1 min-h-[1.5rem]"></p>
+        </div>
+
+        <!-- Panel: foto -->
+        <div data-panel="photo" class="hidden mt-4">
+          <label class="photo-drop">
+            <input id="in-photo" type="file" accept="image/*" class="hidden" />
+            <img id="photo-preview" class="hidden absolute inset-0 w-full h-full object-cover opacity-40" alt="" />
+            <div class="relative z-10 text-center">
+              <div class="text-3xl">🧾</div>
+              <p class="text-sm mt-2" id="photo-status">Sube un ticket o captura de transferencia</p>
+              <p class="text-[11px] text-white/55 mt-1">Leo el monto y el comercio; tú confirmas</p>
+            </div>
+          </label>
+        </div>
+
+        <!-- Revisión (foto/voz): siempre editable antes de guardar -->
+        <div id="review-card" class="hidden review mt-4">
+          <p id="review-title" class="text-[13px] font-medium"></p>
+          <ul id="review-issues" class="text-[12px] text-white/60 mt-1 space-y-0.5"></ul>
+          <label class="field-label !mt-3">Comercio</label>
+          <input id="in-merchant" class="field !py-2.5" autocomplete="off" placeholder="Comercio o destinatario" />
+        </div>
+
+        <!-- Categoría (auto) -->
+        <div class="mt-5">
+          <div class="flex items-center justify-between px-1">
+            <p class="text-[11px] uppercase tracking-[0.18em] text-white/55">Categoría</p>
+            <p id="cat-auto" class="text-[11px] text-neon-cyan/80 hidden">✦ automática</p>
+          </div>
+          <div id="cat-chips" class="chips mt-2"></div>
+        </div>
+
+        <!-- Fecha -->
+        <div class="mt-4 flex items-center justify-between px-1">
+          <p class="text-[11px] uppercase tracking-[0.18em] text-white/55">Fecha</p>
+          <label class="date-pill">
+            <span id="date-label">Hoy</span>
+            <input id="in-date" type="date" aria-label="Fecha del gasto" />
+          </label>
+        </div>
+
+        <button id="btn-save" class="btn-primary mt-6">Registrar gasto</button>
+        <p id="save-status" class="save-status" role="status" aria-live="polite"></p>
+      </div>
+
+      <!-- Recientes -->
+      <div class="mt-8">
+        <div class="flex items-baseline justify-between px-1">
+          <h2 class="text-sm font-semibold text-white/80">Recientes</h2>
+          <p class="text-xs text-white/55" id="today-total"></p>
+        </div>
+        <ul id="recent-list" class="mt-3 space-y-2"></ul>
+      </div>
+    </section>
+
+    <!-- ════════════════ RESUMEN ════════════════ -->
+    <section id="view-dash" class="view hidden px-5">
+      <div class="glass rounded-[28px] p-6 mt-4">
+        <p class="text-xs uppercase tracking-[0.2em] text-white/55" id="dash-month">Gastado este mes</p>
+        <p id="dash-spent" class="text-6xl font-semibold tracking-tight tabular-nums mt-2">$0</p>
+        <div class="flex items-center gap-2 mt-3 text-sm">
+          <span id="dash-delta" class="px-2 py-0.5 rounded-full text-xs"></span>
+          <span class="text-white/55">vs. mes anterior a la fecha</span>
+        </div>
+        <div class="mt-5">
+          <div class="flex justify-between text-xs text-white/50 mb-1.5">
+            <span id="dash-budget-label">Presupuesto</span><span id="dash-budget-pct">0%</span>
+          </div>
+          <div class="h-2.5 rounded-full bg-white/10 overflow-hidden">
+            <div id="dash-budget-bar" class="h-full rounded-full transition-all duration-700" style="width:0%"></div>
+          </div>
+          <p class="text-xs text-white/55 mt-2" id="dash-projection"></p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mt-3">
+        <div class="glass rounded-3xl p-4">
+          <p class="text-[11px] uppercase tracking-[0.16em] text-white/55">Promedio diario</p>
+          <p id="kpi-daily" class="text-2xl font-semibold tabular-nums mt-1">$0</p>
+        </div>
+        <div class="glass rounded-3xl p-4">
+          <p class="text-[11px] uppercase tracking-[0.16em] text-white/55">Movimientos</p>
+          <p id="kpi-count" class="text-2xl font-semibold tabular-nums mt-1">0</p>
+        </div>
+      </div>
+
+      <div class="glass rounded-[28px] p-5 mt-3">
+        <h3 class="text-sm font-semibold text-white/80">Por categoría</h3>
+        <div class="flex items-center gap-4 mt-3">
+          <div class="relative w-36 h-36 shrink-0"><canvas id="chart-cats"></canvas></div>
+          <ul id="cat-legend" class="flex-1 space-y-1.5 text-[13px]"></ul>
+        </div>
+      </div>
+
+      <div class="glass rounded-[28px] p-5 mt-3">
+        <h3 class="text-sm font-semibold text-white/80">Últimos 30 días</h3>
+        <div class="h-40 mt-3"><canvas id="chart-days"></canvas></div>
+      </div>
+
+      <div class="glass rounded-[28px] p-5 mt-3">
+        <h3 class="text-sm font-semibold text-white/80">Tus hábitos</h3>
+        <ul id="habits" class="mt-3 space-y-3 text-[14px]"></ul>
+      </div>
+
+      <div class="glass rounded-[28px] p-5 mt-3 border-neon-purple/30">
+        <h3 class="text-sm font-semibold text-white/80">✦ Sugerencias de ahorro</h3>
+        <ul id="tips" class="mt-3 space-y-3 text-[14px]"></ul>
+      </div>
+    </section>
+
+    <!-- ════════════════ METAS ════════════════ -->
+    <section id="view-goals" class="view hidden px-5">
+      <div id="goals-list" class="space-y-4 mt-4"></div>
+      <button id="btn-new-goal" class="w-full mt-4 glass rounded-3xl py-4 text-sm text-white/70 active:scale-[0.99] transition">＋ Nueva meta</button>
+    </section>
+  </main>
+
+  <!-- Tab bar -->
+  <nav class="tabbar safe-bottom">
+    <button class="tab active" data-view="add">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      <span>Registrar</span>
+    </button>
+    <button class="tab" data-view="dash">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      <span>Resumen</span>
+    </button>
+    <button class="tab" data-view="goals">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>
+      <span>Metas</span>
+    </button>
+  </nav>
+
+  <!-- Hoja modal genérica -->
+  <div id="sheet" class="sheet hidden" aria-modal="true" role="dialog">
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-panel safe-bottom">
+      <div class="w-10 h-1.5 rounded-full bg-white/20 mx-auto mb-4"></div>
+      <div id="sheet-body"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Truco de háptica para iOS 18+: un switch nativo vibra al cambiar -->
+  <label id="haptic-label" class="hidden" aria-hidden="true"><input type="checkbox" switch id="haptic-switch" /></label>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
