@@ -1,6 +1,6 @@
-# Resultados (chromium 2026-11-20 16:49)
+# Resultados (chromium 2026-11-20 16:52)
 
-**11/11 pruebas superadas**
+**12/12 pruebas superadas**
 
 | | Prueba | Detalle |
 |---|---|---|
@@ -14,4 +14,5 @@
 | ✅ | Voz (reconocimiento simulado): interpreta "doscientos cincuenta en tacos" y deja corregir antes de guardar | interpretado $250 · Tacos → corregido a $260 → en Sheets |
 | ✅ | Atajo: vista previa no escribe; confirmar escribe una vez; repetir no duplica; sin monto no guarda | mensaje: "✓ En Sheets: $200 · Café (Comida). Te quedan $23,447 este mes." |
 | ✅ | Banner semanal con presupuesto restante | Semana: $454 · puedes gastar ~$2,231/día por 11 días |
+| ✅ | Seguridad: un enlace de configuración que no apunta a Apps Script se rechaza | configuración intacta |
 | ✅ | Sin errores de JavaScript durante todo el recorrido |  |

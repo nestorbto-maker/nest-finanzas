@@ -1,6 +1,6 @@
 // Service worker: la app abre al instante y funciona sin conexión.
 // Sube VERSION cada vez que publiques cambios para que el iPhone descargue la nueva versión.
-const VERSION = 'nest-v2';
+const VERSION = 'nest-v3';
 const APP_SHELL = [
   './', './index.html', './manifest.webmanifest',
   './css/tailwind.css', './css/app.css', './vendor/chart.umd.min.js',

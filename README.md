@@ -90,7 +90,7 @@ Tras ~30 tickets tendrás datos para decidir. Para probar otro modelo, añade la
 
 ## 5. Verificación
 
-Las pruebas automáticas ejecutan la **PWA real** contra el **`backend/Code.gs` real**. `Code.gs` corre en Node con un Google Sheets simulado que imita el redirect de Apps Script y permite cortar conexiones. Resultado: **11/11 en WebKit y 11/11 en Chromium** ([WebKit](docs/resultados-webkit.md) · [Chromium](docs/resultados-chromium.md)).
+Las pruebas automáticas ejecutan la **PWA real** contra el **`backend/Code.gs` real**. `Code.gs` corre en Node con un Google Sheets simulado que imita el redirect de Apps Script y permite cortar conexiones. Resultado: **12/12 en WebKit y 12/12 en Chromium** ([WebKit](docs/resultados-webkit.md) · [Chromium](docs/resultados-chromium.md)).
 
 ### Probado automáticamente
 - Abre en **Registrar** con Texto/Voz/Foto visibles y el botón Registrar por encima de la barra inferior, aun con el resumen semanal visible y las áreas seguras del iPhone simuladas.
@@ -101,7 +101,7 @@ Las pruebas automáticas ejecutan la **PWA real** contra el **`backend/Code.gs` 
 - **Foto dudosa:** monto vacío, avisos visibles, guardar bloqueado hasta escribir el monto. **Foto clara:** campos rellenos y editables. Ambas con respuestas simuladas del modelo.
 - **Voz:** con reconocimiento simulado, “doscientos cincuenta en tacos” → $250 · Tacos, editable antes de guardar.
 - **Atajo (API):** la vista previa no escribe, confirmar escribe 1 vez, repetir no duplica, sin monto o con token inválido no guarda.
-- Resumen semanal y cero errores de JavaScript en todo el recorrido.
+- Resumen semanal, cero errores de JavaScript, y un enlace de configuración que no apunte a Apps Script se rechaza (los válidos piden confirmación).
 
 ### Pendiente de verificar en tu iPhone
 - Instalación, arranque offline real y aspecto en iOS (las capturas son WebKit de escritorio, no Safari de iOS).

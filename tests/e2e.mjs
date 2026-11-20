@@ -19,7 +19,7 @@ const setupHash = '#setup=' + Buffer.from(JSON.stringify({ u: `${BASE}/__api`, t
 
 // Simula las áreas seguras de un iPhone 15/16 Pro (barra de estado 59 px, indicador de inicio 34 px)
 const SAFE_AREA = ':root{--sat:59px;--sab:34px}';
-const newIPhonePage = async c => { const p = await c.newPage(); await p.addInitScript(css => { document.addEventListener('DOMContentLoaded', () => { const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s); }); }, SAFE_AREA); return p; };
+const newIPhonePage = async c => { const p = await c.newPage(); p.on('dialog', d => d.accept()); /* acepta la confirmación del enlace de configuración */ await p.addInitScript(css => { document.addEventListener('DOMContentLoaded', () => { const s = document.createElement('style'); s.textContent = css; document.head.appendChild(s); }); }, SAFE_AREA); return p; };
 
 const results = [];
 async function test(name, fn) {
@@ -286,6 +286,16 @@ await test('Banner semanal con presupuesto restante', async () => {
   await page.goto(`${BASE}/index.html#add`);
   await page.waitForSelector('#weekly-banner:not(.hidden)');
   return (await page.textContent('#weekly-text')).trim();
+});
+
+await test('Seguridad: un enlace de configuración que no apunta a Apps Script se rechaza', async () => {
+  const before = await page.evaluate(() => localStorage.getItem('nest.settings'));
+  const evil = '#setup=' + Buffer.from(JSON.stringify({ u: 'https://evil.example/collect', t: 'x' })).toString('base64');
+  await page.goto(`${BASE}/index.html${evil}`);
+  await page.waitForSelector('#view-add:not(.hidden)');
+  const after = await page.evaluate(() => localStorage.getItem('nest.settings'));
+  assert(before === after, 'La configuración cambió');
+  return 'configuración intacta';
 });
 
 await test('Sin errores de JavaScript durante todo el recorrido', async () => {

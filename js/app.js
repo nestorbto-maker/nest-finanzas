@@ -588,7 +588,9 @@ function openSettings() {
     ${store.isConfigured() ? '<button class="btn-ghost mt-2" id="s-link">Copiar enlace de configuración</button>' : ''}
     <p class="text-[12px] text-white/55 text-center mt-4" id="s-info">${state.queue.length} cambio(s) en el iPhone pendientes de Sheets${state.meta.lastSync ? ` · última sincronización ${new Date(state.meta.lastSync).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })}` : ''}</p>`, body => {
     body.querySelector('#s-save').onclick = async () => {
-      store.saveSettings({ apiUrl: body.querySelector('#s-url').value.trim(), token: body.querySelector('#s-token').value.trim() });
+      const apiUrl = body.querySelector('#s-url').value.trim();
+      if (!isAllowedApi(apiUrl)) { body.querySelector('#s-info').textContent = 'La URL debe ser la de tu Apps Script: https://script.google.com/macros/s/…/exec'; return; }
+      store.saveSettings({ apiUrl, token: body.querySelector('#s-token').value.trim() });
       const budget = parseFloat(body.querySelector('#s-budget').value);
       if (budget > 0 && budget !== Number(state.data.config?.presupuesto_mensual)) store.setConfig({ presupuesto_mensual: budget });
       body.querySelector('#s-info').textContent = 'Conectando…';
@@ -609,13 +611,25 @@ function openSettings() {
 }
 $('#btn-settings').addEventListener('click', openSettings);
 
-/** #setup=… configura la app con un toque (útil para Safari o un segundo dispositivo). */
+/** Solo se aceptan URLs de Apps Script (o localhost cuando la propia app corre en localhost, para pruebas). */
+function isAllowedApi(u) {
+  try {
+    const url = new URL(u);
+    if (url.protocol === 'https:' && url.hostname === 'script.google.com' && url.pathname.startsWith('/macros/s/')) return true;
+    return location.hostname === 'localhost' && url.hostname === 'localhost';
+  } catch { return false; }
+}
+
+/** #setup=… configura la app con un toque (útil para Safari o un segundo dispositivo). Siempre pide confirmación. */
 function handleSetupLink() {
   const m = location.hash.match(/^#setup=(.+)$/);
   if (!m) return false;
   try {
     const { u, t } = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
-    if (u && t) { store.saveSettings({ apiUrl: u, token: t }); toast('✓ App configurada'); }
+    if (!u || !t || !isAllowedApi(u)) toast('Enlace rechazado: no apunta a Google Apps Script');
+    else if (confirm(`¿Conectar NEST con este Apps Script?\n\n${u.slice(0, 80)}…\n\nTus gastos se enviarán ahí. Acepta solo si el enlace lo generaste tú.`)) {
+      store.saveSettings({ apiUrl: u, token: t }); toast('✓ App configurada');
+    }
   } catch { toast('Enlace de configuración inválido'); }
   history.replaceState(null, '', `${location.pathname}#add`);
   return true;
